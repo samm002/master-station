@@ -9,18 +9,21 @@ const local = {
 
 // Configuration for online broker HiveMQ
 const cool = {
+  clean: true,
   host: 'broker.mqtt.cool',
-  port: 1883,
+  port: "1883",
   protocol: 'mqtt',
-  // username: 'samm002',
-  // clientId: "clientId-YDFpPL35p5",
-  // password: `${process.env.MQTT_BROKER_PASSWORD}`
+  clientId: "c8996a3a-f7eb-438d-96c2-70b1e07308f8",
 }
+// username: 'samm002',
+// clientId: "clientId-YDFpPL35p5",
+// password: `${process.env.MQTT_BROKER_PASSWORD}`
 
 const emqx = {
   host: 'broker.emqx.io',
   port: 1883,
   protocol: 'mqtt',
+  clean: true,
 }
 
 module.exports = {

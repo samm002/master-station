@@ -1,15 +1,5 @@
 const ruleService = require('../services/ruleService')
 
-const getAllTriggers = async (req, res) => {
-  try {
-    const triggers = await ruleService.getAllTriggers();
-    res.json(triggers);
-  } catch (error) {
-    console.error('error :', error)
-    res.status(500).json({ error: "Failed to retrieve triggers", detail: error.message});
-  }
-};
-
 const getAllRules = async (req, res) => {
   try {
     const rules = await ruleService.getAllRules();
@@ -103,7 +93,6 @@ const deleteAllRule = async (req, res) => {
 
 module.exports = {
   findLatestRuleId,
-  getAllTriggers,
   getAllRules,
   getRuleByRule_id,
   createOrUpdateRule,

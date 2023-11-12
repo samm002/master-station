@@ -1,4 +1,4 @@
-const { client } = require("../Mqtt/mqtt");
+const { client } = require("../mqtt/mqtt");
 const { getAllRules } = require("../services/ruleService");
 const Device = require("../models/deviceModel");
 const {
@@ -10,19 +10,22 @@ const {
 } = require("../services/dataProccessService");
 
 const publishAllRulesToMqtt = async (req, res) => {
-  const publishTopic = "rule";
-  const message = `Rules published to ${publishTopic} topic`;
+  const topic = "rule";
+  const message = `Rules published to topic : ${topic}`;
   const timestamp = new Date().toLocaleString();
   try {
     const rulesMap = await getAllRules();
 
     rulesMap.forEach((ruleData) => {
-      client.publish(publishTopic, JSON.stringify(ruleData), (error) => {
+      const payload = JSON.stringify(ruleData);
+      client.publish(topic, payload, (error) => {
         if (error) {
           console.error(`Failed to publish rule: ${JSON.stringify(ruleData)}`);
         }
       });
     });
+
+    console.log(message);
     res.json({ "Publish Time": timestamp, message, rules: rulesMap });
   } catch (error) {
     console.error("Failed to retrieve or publish rules:", error);
@@ -35,10 +38,14 @@ const saveDeviceToDatabase = async (receivedData) => {
   try {
     const device = new Device({ device_id, device_value });
     const newDevice = await device.save();
-    const response = { status: "Device status saved to database", detail: getPublishedDevice(newDevice) } 
-    console.log(response, '\n');
+    const response = {
+      status: "Device status saved to database",
+      detail: getPublishedDevice(newDevice),
+    };
+    console.log(response, "\n");
     return newDevice;
   } catch (error) {
+    console.error("Failed to saved device status in database", error);
     throw error;
   }
 };
@@ -69,19 +76,20 @@ const findMatchingRules = async () => {
   // merge array of mapped object device data become 1 object
   const mergedObject = mergeObjectsFromArray(transformed);
 
-  console.log("merged transformed latest device status :", mergedObject);
+  // console.log("merged transformed latest device status :", mergedObject);
 
   const matchingRules = [];
+  const candidateRules = [];
   let maxTotalTrigger = 0;
 
   console.log("\nCurrent Device Statuses :", mergedObject);
-  console.log("\nMatched Rule Candidates :");
 
   rules.forEach((rule) => {
     const trigger = rule.trigger;
+    console.log(rule);
     const totalTrigger = Object.keys(trigger).length;
     if (isRuleMatch(mergedObject, trigger)) {
-      console.log(rule);
+      candidateRules.push(rule);
       if (totalTrigger > maxTotalTrigger) {
         // Jika jumlah key yang cocok lebih banyak dari yang sebelumnya
         // Bersihkan array matchingRules dan tambahkan rule saat ini
@@ -96,17 +104,35 @@ const findMatchingRules = async () => {
     }
   });
 
+  candidateRules.length > 1
+    ? console.log(
+        `\nMatched Rule Candidates (total : ${candidateRules.length}) :`
+      )
+    : console.log(
+        `\nMatched Rule Candidate (total : ${candidateRules.length}) :`
+      );
+  for (const rule of candidateRules) {
+    console.log(rule);
+  }
+
+  // apabila tidak ingin ditampilin satu satu, langsung saja outputkan array rule : console.log(candidateRules)
+
   if (matchingRules.length !== 0) {
     if (matchingRules.length === 1) {
       console.log(
-        `There is a matched rule in rule_id : ${matchingRules[0].rule_id}`
+        `\nThere is a matched rule in rule_id : ${matchingRules[0].rule_id}`
       );
       console.log("\nMatched Rule :");
       console.log(matchingRules[0]);
     } else {
+      const matchedRuleId = matchingRules
+        .map((matchedRule) => matchedRule.rule_id)
+        .join(", ");
+      console.log(
+        `There are ${matchingRules.length} matched rules in rule_id : ${matchedRuleId}`
+      );
       console.log("\nMatched Rules :");
       for (const rule of matchingRules) {
-        // console.log(`There is a matched rule in rule_id : ${rule.rule_id}`);
         console.log(rule);
       }
     }
@@ -134,9 +160,8 @@ const publishMatchingRules = (matchingRules) => {
       // const newDevice = await serviceDevice.save();
       const publishedPayload = getDeviceCompareData(serviceDevice);
 
-      // Tidak jadi menyimpan status data dari master station, tetapi menunggu respone berhasil menerima dari service device
+      // Tidak jadi menyimpan status data dari master station, tetapi menunggu respond berhasil menerima dari service device
       // const newDevice = await serviceDevice.save();
-
 
       // console.log("Saved Device Status : ", getPublishedDevice(newDevice));
       publishToService(publishedTopic, publishedPayload);
@@ -145,7 +170,8 @@ const publishMatchingRules = (matchingRules) => {
 };
 
 const publishToService = (topic, message) => {
-  client.publish(topic, JSON.stringify(message), (error) => {
+  const payload = JSON.stringify(message);
+  client.publish(topic, payload, (error) => {
     if (error) {
       console.error(
         `Failed to publish service data to topic ${topic}, message :`,
@@ -164,6 +190,7 @@ const publishToService = (topic, message) => {
 
 client.on("message", async (topic, payload) => {
   try {
+    // console.log("Received payload:", payload, "from topic", topic);
     if (topic === "trigger") {
       if (payload) {
         // publishAllRulesToMqtt()
@@ -177,8 +204,10 @@ client.on("message", async (topic, payload) => {
     } else if (topic === "device") {
       if (payload) {
         const parsedPayload = JSON.parse(payload);
-        console.log("\nMessage received from trigger device :", parsedPayload);
+        console.log("\nMessage received from service device :", parsedPayload);
         saveDeviceToDatabase(parsedPayload);
+        // Clear the retained message on the "device" topic
+        // client.publish("device", '', { retain: true });
       }
     }
   } catch (error) {

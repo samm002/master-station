@@ -11,7 +11,7 @@ client.on("connect", () => {
   client.subscribe(topics, (err) => {
     if (!err) {
       console.log(`Master station successfully subscribed to topic : ${topics.join(', ')}`);
-      console.log("Waiting for Mqtt messages...");
+      console.log("Waiting for MQTT messages...");
     } else {
       console.log(`Subscribed to topic : ${topics.join(', ')} failed`);
       console.log('error :', err);

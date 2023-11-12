@@ -13,30 +13,6 @@ const getAllRules = async () => {
   return rules.map((rule) => ruleFormat(rule));
 };
 
-// const getAllTriggers = async () => {
-//   const rules = await Rule.find();
-//   const triggerMap = rules.map((rule) => ({
-//     trigger: rule.trigger,
-//   }));
-//   return triggerMap;
-// }
-
-const getAllTriggers = async () => {
-  const rules = await Rule.find();
-
-  // Extract the trigger objects from the rules and convert them to the desired format
-  const triggerDevices = rules.map((rule) => {
-    const trigger = rule.trigger;
-    return Object.keys(trigger).map(device_id => ({
-      device_id: device_id,
-      device_value: trigger[device_id],
-    }));
-  });
-
-  return triggerDevices;
-};
-
-
 const getRuleByRule_id = async (rule_id) => {
   try {
     const rule = await Rule.findOne({ rule_id });
@@ -148,7 +124,6 @@ const deleteAllRule = async () => {
 
 module.exports = {
   findLatestRuleId,
-  getAllTriggers,
   getAllRules,
   getRuleByRule_id,
   createOrUpdateRule,

@@ -10,11 +10,11 @@ const deviceFormat = (device) => {
 
 const getAllDeviceStatus = async () => {
   try {
-    const devices = await Device.find().sort({ device_id: 1 });
+    const devices = await Device.find().sort({ device_id: 1, timestamp: -1 });
     const devicesCount = await Device.countDocuments();
     if (devicesCount !== 0) {
       if (devicesCount === 1) {
-        return { "Total Devices": devicesCount, Devices: deviceFormat(devices) };
+        return { "Total Devices": devicesCount, Devices: deviceFormat(devices[0]) };
       } else {
         const mappedDevices = devices.map((device) => deviceFormat(device));
         return { "Total Devices": devicesCount, Devices: mappedDevices };
