@@ -1,9 +1,7 @@
-const mqtt = require("mqtt");
 require("dotenv").config();
-
+const mqtt = require("mqtt");
 const { local, cool, emqx } = require('./brokerSetting')
-
-const client = mqtt.connect(cool);
+const client = mqtt.connect(local);
 const topics = ["trigger", "device"];
 
 client.on("connect", () => {
@@ -13,8 +11,8 @@ client.on("connect", () => {
       console.log(`Master station successfully subscribed to topic : ${topics.join(', ')}`);
       console.log("Waiting for MQTT messages...");
     } else {
-      console.log(`Subscribed to topic : ${topics.join(', ')} failed`);
-      console.log('error :', err);
+      console.error(`Subscribed to topic : ${topics.join(', ')} failed`);
+      console.error('error :', err);
     }
   });
 });
@@ -27,8 +25,8 @@ client.on("error", (error) => {
   console.error("MQTT client error:", error.message);
 });
 
-client.on("close", () => {
-  console.log("Disconnected from MQTT broker");
+client.on("close", (message) => {
+  console.log("Disconnected from MQTT broker", message);
 });
 
 module.exports = {

@@ -18,7 +18,7 @@ app.get('/', (req, res) => {
 })
 
 mongoose
-  .connect(cloudHost)
+  .connect(host)
   .then(() => console.log("Connected to MongoDB..."))
   .catch((err) => console.error("Could not connect to MongoDB...", err));
 
