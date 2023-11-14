@@ -32,15 +32,15 @@ const createNewDeviceStatus = async (req, res) => {
   const { device_id, device_value } = req.body;
   try {
     const newDevice = await deviceService.createNewDeviceStatus(device_id, device_value)
-    res.json(newDevice);
+    res.status(201).json(newDevice);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
 const updateLatestDeviceStatusById = async (req, res) => {
-  const { device_id } = req.params; // Get the device ID from URL parameters
-  const { device_value } = req.body; // Get the new device value from the request body
+  const { device_id } = req.params;
+  const { device_value } = req.body;
   const timestamp = new Date().toLocaleString();
   try {
     const updateLatestDevice = await deviceService.updateLatestDeviceStatus(device_id, device_value, timestamp);
