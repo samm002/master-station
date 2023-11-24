@@ -1,5 +1,6 @@
 const { client } = require("../mqtt/mqttSetup");
 const {
+  publishAllRulesToMqttService,
   saveDeviceToDatabase,
   findMatchingRules,
   publishMatchingRules,
@@ -8,7 +9,7 @@ const {
 const publishAllRulesToMqtt = async (req, res) => {
   const topic = "rule";
   try {
-    const publish = await mqttService.publishAllRulesToMqtt(topic);
+    const publish = await publishAllRulesToMqttService(topic);
     res.json(publish);
   } catch (error) {
     console.error("error :", error);

@@ -10,7 +10,7 @@ const {
   mergeObjectsFromArray,
 } = require("../services/dataProccessService");
 
-const publishAllRulesToMqtt = async (topic) => {
+const publishAllRulesToMqttService = async (topic) => {
   const message = `Rules published to topic : ${topic}`;
   const timestamp = moment().format("MM/DD/YYYY, HH:mm:ss");
   try {
@@ -185,7 +185,7 @@ const publishToService = (topic, message) => {
 };
 
 module.exports = {
-  publishAllRulesToMqtt,
+  publishAllRulesToMqttService,
   saveDeviceToDatabase,
   isRuleMatch,
   findMatchingRules,
