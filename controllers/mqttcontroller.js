@@ -4,6 +4,10 @@ const {
   saveDeviceToDatabase,
   findMatchingRules,
   publishMatchingRules,
+  ackReceivedFromService,
+  publishAckToTrigger,
+  ackTimeout,
+  clearAckTimeout,
 } = require("../services/mqttService");
 
 const publishAllRulesToMqtt = async (req, res) => {
@@ -22,23 +26,19 @@ const publishAllRulesToMqtt = async (req, res) => {
 
 client.on("message", async (topic, payload) => {
   try {
-    if (topic === "trigger") {
-      if (payload) {
-        // publishAllRulesToMqtt()
-        const parsedPayload = JSON.parse(payload);
+    if (payload) {
+      const parsedPayload = JSON.parse(payload);
+      const triggerId = parsedPayload.device_id;
+      if (topic === "trigger") {
         console.log("\nMessage received from trigger device :", parsedPayload);
         saveDeviceToDatabase(parsedPayload);
         const matchedRules = await findMatchingRules();
-        // console.log("matched rules :", matchedRules);
         publishMatchingRules(matchedRules);
-      }
-    } else if (topic === "device") {
-      if (payload) {
-        const parsedPayload = JSON.parse(payload);
-        console.log("\nMessage received from service device :", parsedPayload);
-        saveDeviceToDatabase(parsedPayload);
-        // Clear the retained message on the "device" topic
-        // client.publish("device", '', { retain: true });
+        ackTimeout(5000);
+      } else if (topic === "service_ack") {
+        await ackReceivedFromService(parsedPayload);
+        publishAckToTrigger(triggerId);
+        clearAckTimeout();
       }
     }
   } catch (error) {

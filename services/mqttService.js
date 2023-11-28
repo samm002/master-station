@@ -1,5 +1,6 @@
 const moment = require("moment");
 const Device = require("../models/deviceModel");
+let timeout;
 const { client } = require("../mqtt/mqttSetup");
 const { getAllRules } = require("../services/ruleService");
 const {
@@ -9,6 +10,18 @@ const {
   transformObject,
   mergeObjectsFromArray,
 } = require("../services/dataProccessService");
+
+const ackTimeout = (duration) => {
+  timeout = setTimeout(async () => {
+    console.log(
+      "Timeout! Did not receive any message from service device within 5 second"
+    );
+  }, duration);
+};
+
+const clearAckTimeout = () => {
+  clearTimeout(timeout);
+}
 
 const publishAllRulesToMqttService = async (topic) => {
   const message = `Rules published to topic : ${topic}`;
@@ -65,7 +78,6 @@ const isRuleMatch = (deviceValue, ruleTrigger) => {
 const findMatchingRules = async () => {
   const latestDeviceValues = await comparedDeviceData();
   const rules = await getAllRules();
-  // console.log("rules :", rules);
   console.log("latest device status", latestDeviceValues);
 
   // map the device data to have same format as rule trigger
@@ -115,8 +127,6 @@ const findMatchingRules = async () => {
     console.log(rule);
   }
 
-  // apabila tidak ingin ditampilin satu satu, langsung saja outputkan array rule : console.log(candidateRules)
-
   if (matchingRules.length !== 0) {
     if (matchingRules.length === 1) {
       console.log(
@@ -143,33 +153,48 @@ const findMatchingRules = async () => {
 };
 
 // Comment ketika tes fungsional bersama
-const publishMatchingRules = (matchingRules) => {
+const publishMatchingRules = async (matchingRules) => {
   const publishedTopic = "service";
-  // console.log("\nSaved Current Service Device Status :");
+  console.log("\nPublishing Matched Rules :\n");
   matchingRules.forEach(async (matchingRule) => {
     for (const device_id in matchingRule.service) {
       const serviceData = {
         [device_id]: matchingRule.service[device_id],
       };
-      const deviceId = Object.keys(serviceData)[0]; // Get the key (device_id)
-      const serviceValue = serviceData[device_id]; // Get the value (service value)
+      const deviceId = Object.keys(serviceData)[0];
+      const serviceValue = serviceData[device_id];
       const serviceDevice = new Device({
         device_id: deviceId,
-        device_value: serviceValue, // Assuming the device_value should be stored from the service data
+        device_value: serviceValue,
       });
-      // const newDevice = await serviceDevice.save();
-      const publishedPayload = getDeviceCompareData(serviceDevice);
-
-      // Tidak jadi menyimpan status data dari master station, tetapi menunggu respond berhasil menerima dari service device
-      // const newDevice = await serviceDevice.save();
-
-      // console.log("Saved Device Status : ", getPublishedDevice(newDevice));
-      publishToService(publishedTopic, publishedPayload);
+      
+      const publishedPayload = getDeviceCompareData(serviceDevice);      
+      publishMqttMessage(publishedTopic, publishedPayload);
     }
   });
 };
 
-const publishToService = (topic, message) => {
+const ackReceivedFromService = async (payload) => {
+  // Service Device kirim kondisi device terbaru sebagai ACK
+  // Contoh : {"device_id":3, "device_value":1}
+  const serviceDevice = new Device(payload);
+  const serviceId = serviceDevice.device_id;
+  const savedDevice = await serviceDevice.save();
+  console.log('\nReceived ACK message from service device id :', serviceId, '\nMessage :', payload)
+  console.log('\nService Device Saved to Database :\n', savedDevice);  
+}
+
+const publishAckToTrigger = async (trigger_id) => {
+  const topic = 'trigger_ack';
+  const payload = {
+    status: 'success',
+    device_id: trigger_id,
+  };
+  console.log('\nSending ACK message to triger device id :', trigger_id);
+  publishMqttMessage(topic, payload);
+}
+
+const publishMqttMessage = (topic, message) => {
   const payload = JSON.stringify(message);
   client.publish(topic, payload, (error) => {
     if (error) {
@@ -179,15 +204,19 @@ const publishToService = (topic, message) => {
         "\n"
       );
     } else {
-      console.log(`\nMessage published to topic ${topic}, message :`, message);
+      console.log(`Message published to topic ${topic}, message :`, message, '\n');
     }
   });
 };
 
 module.exports = {
+  ackTimeout,
+  clearAckTimeout,
   publishAllRulesToMqttService,
   saveDeviceToDatabase,
   isRuleMatch,
   findMatchingRules,
   publishMatchingRules,
+  ackReceivedFromService,
+  publishAckToTrigger,
 };
