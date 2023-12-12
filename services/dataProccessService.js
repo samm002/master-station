@@ -1,4 +1,4 @@
-const { getAllLatestDeviceValue } = require("../services/deviceService");
+const { getAllLatestDeviceStatus } = require("../services/deviceService");
 
 const getPublishedDevice = (device) => {
   return {
@@ -16,7 +16,7 @@ const getDeviceCompareData = (device) => {
 };
 
 const comparedDeviceData = async () => {
-  const devices = await getAllLatestDeviceValue();
+  const devices = await getAllLatestDeviceStatus();
   return devices
     .map((device) => getDeviceCompareData(device))
     .filter(device => device.device_id !== null);

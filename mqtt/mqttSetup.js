@@ -1,6 +1,6 @@
 const mqtt = require("mqtt");
 const { local, cool, emqx } = require('./brokerSetting')
-const client = mqtt.connect(local);
+const client = mqtt.connect(cool);
 const topics = ["trigger", "service_ack"];
 
 const mqttSetup = () => {

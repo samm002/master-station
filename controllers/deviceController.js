@@ -9,9 +9,9 @@ const getAllDeviceStatus = async (req, res) => {
   }
 };
 
-const getAllLatestDeviceValue = async (req, res) => {
+const getAllLatestDeviceStatus = async (req, res) => {
   try {
-    const latestDevices = await deviceService.getAllLatestDeviceValue()
+    const latestDevices = await deviceService.getAllLatestDeviceStatus()
     res.json(latestDevices)
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -71,7 +71,7 @@ const deleteAllDeviceStatus = async (req, res) => {
 
 module.exports = {
   getAllDeviceStatus,
-  getAllLatestDeviceValue,
+  getAllLatestDeviceStatus,
   getLatestDeviceStatusById,
   createNewDeviceStatus,
   updateLatestDeviceStatusById,

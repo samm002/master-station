@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { localHost, cloudHost } = require('./hostSetting')
+const { localHost, cloudHost } = require("./hostSetting");
 
 const mongoDBSetup = () => {
   try {
@@ -10,8 +10,8 @@ const mongoDBSetup = () => {
   } catch (error) {
     console.error("An unexpected error occurred during MongoDB setup:", error);
   }
-}
+};
 
 module.exports = {
   mongoDBSetup,
-}
+};

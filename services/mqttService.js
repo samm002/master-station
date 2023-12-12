@@ -1,7 +1,7 @@
 const moment = require("moment");
 const Device = require("../models/deviceModel");
 let timeout;
-const { client } = require("../mqtt/mqttSetup");
+const { client, mqttSetup } = require("../mqtt/mqttSetup");
 const { getAllRules } = require("../services/ruleService");
 const {
   getPublishedDevice,
@@ -14,14 +14,15 @@ const {
 const ackTimeout = (duration) => {
   timeout = setTimeout(async () => {
     console.log(
-      "Timeout! Did not receive any message from service device within 5 second"
+      "\nTimeout! Did not receive any message from service device within 5 second\n"
     );
+    console.log("Waiting for MQTT message...");
   }, duration);
 };
 
 const clearAckTimeout = () => {
   clearTimeout(timeout);
-}
+};
 
 const publishAllRulesToMqttService = async (topic) => {
   const message = `Rules published to topic : ${topic}`;
@@ -78,27 +79,18 @@ const isRuleMatch = (deviceValue, ruleTrigger) => {
 const findMatchingRules = async () => {
   const latestDeviceValues = await comparedDeviceData();
   const rules = await getAllRules();
-  console.log("latest device status", latestDeviceValues);
+  console.log("latest device status :");
+  console.log(latestDeviceValues);
 
-  // map the device data to have same format as rule trigger
   const transformed = latestDeviceValues.map(transformObject);
-
-  console.log("transformed latest device status :", transformed);
-
-  // merge array of mapped object device data become 1 object
   const mergedObject = mergeObjectsFromArray(transformed);
-
-  // console.log("merged transformed latest device status :", mergedObject);
 
   const matchingRules = [];
   const candidateRules = [];
   let maxTotalTrigger = 0;
 
-  console.log("\nCurrent Device Statuses :", mergedObject);
-
   rules.forEach((rule) => {
     const trigger = rule.trigger;
-    // console.log(rule);
     const totalTrigger = Object.keys(trigger).length;
     if (isRuleMatch(mergedObject, trigger)) {
       candidateRules.push(rule);
@@ -167,8 +159,8 @@ const publishMatchingRules = async (matchingRules) => {
         device_id: deviceId,
         device_value: serviceValue,
       });
-      
-      const publishedPayload = getDeviceCompareData(serviceDevice);      
+
+      const publishedPayload = getDeviceCompareData(serviceDevice);
       publishMqttMessage(publishedTopic, publishedPayload);
     }
   });
@@ -180,19 +172,26 @@ const ackReceivedFromService = async (payload) => {
   const serviceDevice = new Device(payload);
   const serviceId = serviceDevice.device_id;
   const savedDevice = await serviceDevice.save();
-  console.log('\nReceived ACK message from service device id :', serviceId, '\nMessage :', payload)
-  console.log('\nService Device Saved to Database :\n', savedDevice);  
-}
+  const response = {
+    status: "Device status saved to database",
+    detail: getPublishedDevice(savedDevice),
+  };
+  console.log(
+    `\nReceived ACK message from service device id ${serviceId} :`,
+    payload
+  );
+  console.log(response);
+};
 
 const publishAckToTrigger = async (trigger_id) => {
-  const topic = 'trigger_ack';
+  const topic = "MS_ack";
   const payload = {
-    status: 'success',
+    status: "success",
     device_id: trigger_id,
   };
-  console.log('\nSending ACK message to triger device id :', trigger_id);
+  console.log("\nSending ACK message to triger device id :", trigger_id);
   publishMqttMessage(topic, payload);
-}
+};
 
 const publishMqttMessage = (topic, message) => {
   const payload = JSON.stringify(message);
@@ -204,7 +203,11 @@ const publishMqttMessage = (topic, message) => {
         "\n"
       );
     } else {
-      console.log(`Message published to topic ${topic}, message :`, message, '\n');
+      console.log(
+        `Message published to topic ${topic}, message :`,
+        message,
+        "\n"
+      );
     }
   });
 };

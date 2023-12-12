@@ -4,5 +4,5 @@ const cloudHost = process.env.MONGO_URI;
 
 module.exports = {
   localHost,
-  cloudHost
-}
+  cloudHost,
+};

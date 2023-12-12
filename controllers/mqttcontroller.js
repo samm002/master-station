@@ -9,6 +9,7 @@ const {
   ackTimeout,
   clearAckTimeout,
 } = require("../services/mqttService");
+let triggerId;
 
 const publishAllRulesToMqtt = async (req, res) => {
   const topic = "rule";
@@ -28,13 +29,14 @@ client.on("message", async (topic, payload) => {
   try {
     if (payload) {
       const parsedPayload = JSON.parse(payload);
-      const triggerId = parsedPayload.device_id;
       if (topic === "trigger") {
+        triggerId = parsedPayload.device_id;
         console.log("\nMessage received from trigger device :", parsedPayload);
         saveDeviceToDatabase(parsedPayload);
         const matchedRules = await findMatchingRules();
         publishMatchingRules(matchedRules);
         ackTimeout(5000);
+        console.log("Waiting for ACK Messages...");
       } else if (topic === "service_ack") {
         await ackReceivedFromService(parsedPayload);
         publishAckToTrigger(triggerId);
