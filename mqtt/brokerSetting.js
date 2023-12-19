@@ -1,4 +1,4 @@
-// Configuration for local mosquitto broker
+// Configuration for local broker mosquitto
 const local = {
   host: "localhost",
   port: "1883",
@@ -7,27 +7,24 @@ const local = {
   clean: true,
 };
 
-// Configuration for online broker HiveMQ
+// Configuration for online broke cool
 const cool = {
   clean: true,
-  host: 'broker.mqtt.cool',
+  host: "broker.mqtt.cool",
   port: "1883",
-  protocol: 'mqtt',
+  protocol: "mqtt",
   clientId: "c8996a3a-f7eb-438d-96c2-70b1e07308f8",
-}
-// username: 'samm002',
-// clientId: "clientId-YDFpPL35p5",
-// password: `${process.env.MQTT_BROKER_PASSWORD}`
+};
 
 const emqx = {
-  host: 'broker.emqx.io',
+  host: "broker.emqx.io",
   port: 1883,
-  protocol: 'mqtt',
+  protocol: "mqtt",
   clean: true,
-}
+};
 
 module.exports = {
   local,
   cool,
   emqx,
-}
+};

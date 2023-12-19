@@ -53,7 +53,7 @@ const updateLatestDeviceStatusById = async (req, res) => {
 const deleteDeviceStatusById = async (req, res) => {
   const { device_id } = req.params;
   try {
-    const deletedDevices = await deviceService.deleteDeviceStatusById(device_id)
+    const deletedDevices = await deviceService.deleteDeviceStatusById(device_id);
     res.json(deletedDevices)
   } catch (error) {
     res.status(500).json({ error: error.message });

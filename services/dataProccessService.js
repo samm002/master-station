@@ -19,7 +19,7 @@ const comparedDeviceData = async () => {
   const devices = await getAllLatestDeviceStatus();
   return devices
     .map((device) => getDeviceCompareData(device))
-    .filter(device => device.device_id !== null);
+    .filter((device) => device.device_id !== null);
 };
 
 const transformObject = (obj) => {

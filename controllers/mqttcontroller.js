@@ -1,3 +1,5 @@
+const timeout = 5000
+let triggerId;
 const { client } = require("../mqtt/mqttSetup");
 const {
   publishAllRulesToMqttService,
@@ -9,7 +11,6 @@ const {
   ackTimeout,
   clearAckTimeout,
 } = require("../services/mqttService");
-let triggerId;
 
 const publishAllRulesToMqtt = async (req, res) => {
   const topic = "rule";
@@ -34,9 +35,13 @@ client.on("message", async (topic, payload) => {
         console.log("\nMessage received from trigger device :", parsedPayload);
         saveDeviceToDatabase(parsedPayload);
         const matchedRules = await findMatchingRules();
-        publishMatchingRules(matchedRules);
-        ackTimeout(5000);
-        console.log("Waiting for ACK Messages...");
+        if (matchedRules.length != 0) {
+          publishMatchingRules(matchedRules);
+          ackTimeout(timeout);
+          console.log("Waiting for ACK Messages...");
+        } else {
+          console.log("\nWaiting for MQTT messages...")
+        }
       } else if (topic === "service_ack") {
         await ackReceivedFromService(parsedPayload);
         publishAckToTrigger(triggerId);
@@ -44,7 +49,7 @@ client.on("message", async (topic, payload) => {
       }
     }
   } catch (error) {
-    throw new Error(error);
+    throw error;
   }
 });
 

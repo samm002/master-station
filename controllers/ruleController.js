@@ -10,9 +10,9 @@ const getAllRules = async (req, res) => {
   }
 };
 
-const findLatestRuleId = async (req, res) => {
+const getLatestRuleId = async (req, res) => {
   try {
-    const rule = await ruleService.findLatestRuleId();
+    const rule = await ruleService.getLatestRuleId();
     res.json(rule);
   } catch (error) {
     console.error('error :', error)
@@ -34,7 +34,7 @@ const getRuleByRule_id = async (req, res) => {
 const createOrUpdateRule = async (req, res) => {
   const { rule_id, trigger, service } = req.body;
   const latestRuleId = await ruleService.findLatestRuleId();
-  let getLatest_ruleId
+  let getLatest_ruleId;
   
   if (latestRuleId) {
     getLatest_ruleId =  parseInt(latestRuleId.rule_id, 10) + 1
@@ -92,8 +92,8 @@ const deleteAllRule = async (req, res) => {
 };
 
 module.exports = {
-  findLatestRuleId,
   getAllRules,
+  getLatestRuleId,
   getRuleByRule_id,
   createOrUpdateRule,
   updateRule,

@@ -14,12 +14,12 @@ const latestDeviceFormat = async () => {
     {
       $group: {
         _id: "$device_id",
-        device_id: { $first: "$device_id" }, // Keep the field name as 'device_id'
+        device_id: { $first: "$device_id" },
         device_value: { $first: "$device_value" },
         timestamp: { $first: "$timestamp" },
       },
     },
-    // Project to exclude the '_id' field
+
     {
       $project: {
         _id: 0,
@@ -29,7 +29,7 @@ const latestDeviceFormat = async () => {
       },
     },
     {
-      $sort: { device_id: 1 }, // Sort the result by 'device_id' in ascending order
+      $sort: { device_id: 1 },
     },
   ]);
   return latestDevices;
@@ -51,13 +51,13 @@ const getAllDeviceStatus = async () => {
       }
     } else {
       return {
-        error:
-          "Failed getting device statuses, database empty, nothing to show",
+        error: "Failed getting device statuses, database empty, nothing to show",
         "total devices": devicesCount,
       };
     }
   } catch (error) {
-    throw error;
+    console.error(error);
+    throw new Error("Failed to get all device status");
   }
 };
 
@@ -69,28 +69,27 @@ const getAllLatestDeviceStatus = async () => {
       return latestDevices;
     } else {
       return {
-        error:
-          "Failed getting device statuses, database empty, nothing to show",
+        error: "Failed getting device statuses, database empty, nothing to show",
         "Total Devices": devicesCount,
       };
     }
   } catch (error) {
     console.error(error);
-    throw new Error("Failed to get latest device statuses");
+    throw new Error("Failed to get latest device status");
   }
 };
 
 const getLatestDeviceStatusById = async (device_id) => {
   try {
-    const latestDevice = await Device.find({ device_id })
+    const latestDevice = await Device.findOne({ device_id })
       .sort({ timestamp: -1 })
-      .limit(1);
     if (latestDevice) {
-      return deviceFormat(latestDevice[0]);
+      return deviceFormat(latestDevice);
     } else {
       return { error: `Device with device_id : ${device_id} not found` };
     }
   } catch (error) {
+    console.error(error);
     throw new Error("Failed to get latest device status");
   }
 };
@@ -101,6 +100,7 @@ const createNewDeviceStatus = async (device_id, device_value) => {
     const newDevice = await device.save();
     return deviceFormat(newDevice);
   } catch (error) {
+    console.error(error);
     throw new Error("Failed to create new device");
   }
 };
@@ -125,6 +125,7 @@ const updateLatestDeviceStatus = async (device_id, device_value, timestamp) => {
       };
     }
   } catch (error) {
+    console.error(error);
     throw new Error("Failed to update latest device status");
   }
 };
@@ -143,6 +144,7 @@ const deleteDeviceStatusById = async (device_id) => {
       };
     }
   } catch (error) {
+    console.error(error);
     throw new Error(`Failed to delete devices with id : ${device_id}`);
   }
 };
