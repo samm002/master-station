@@ -33,10 +33,10 @@ const getRuleByRule_id = async (req, res) => {
 
 const createOrUpdateRule = async (req, res) => {
   const { rule_id, trigger, service } = req.body;
-  const latestRuleId = await ruleService.findLatestRuleId();
+  const latestRuleId = await ruleService.getLatestRuleId();
   let getLatest_ruleId;
   
-  if (latestRuleId) {
+  if (latestRuleId && !isNaN(latestRuleId.rule_id)) {
     getLatest_ruleId =  parseInt(latestRuleId.rule_id, 10) + 1
   } else {
     getLatest_ruleId = 1
@@ -45,7 +45,7 @@ const createOrUpdateRule = async (req, res) => {
   try {
     if (!rule_id) {
       const rule = await ruleService.createOrUpdateRule(getLatest_ruleId, trigger, service);
-      res.json(rule);
+      res.status(201).json(rule);
     } else {
       const rule = await ruleService.createOrUpdateRule(rule_id, trigger, service);
       res.json(rule);

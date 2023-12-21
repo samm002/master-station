@@ -36,6 +36,9 @@ const getAllRules = async () => {
 
 const getRuleByRule_id = async (rule_id) => {
   try {
+    if (isNaN(rule_id)) {
+      throw new Error(`Invalid rule_id: ${rule_id}`);
+    }
     const rule = await Rule.findOne({ rule_id });
     console.log(`Getting rule with rule_id : ${rule_id}`);
     if (rule) {
@@ -45,7 +48,7 @@ const getRuleByRule_id = async (rule_id) => {
     }
   } catch (error) {
     console.error(error);
-    throw new Error("Failed to get rule data by id");
+    throw new Error(error);
   }
 };
 
@@ -142,7 +145,7 @@ const deleteRule = async (rule_id) => {
 const deleteAllRule = async () => {
   try {
     const deletedRules = await Rule.deleteMany();
-    if (deletedRules.deletedCount === 1) {
+    if (deletedRules.deletedCount !== 0) {
       return {
         Message: `Successfully delete all rules`,
         detail: deletedRules,

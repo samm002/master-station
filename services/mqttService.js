@@ -89,7 +89,8 @@ const findMatchingRules = async () => {
   const candidateRules = [];
   let maxTotalTrigger = 0;
   
-  rules.forEach((rule) => {
+  const rulesFound = rules.Rules; 
+  rulesFound.forEach((rule) => {
     const trigger = rule.trigger;
     const totalTrigger = Object.keys(trigger).length;
     if (isRuleMatch(mergedObject, trigger)) {
@@ -199,4 +200,5 @@ module.exports = {
   publishMatchingRules,
   ackReceivedFromService,
   publishAckToTrigger,
+  publishService_ACK
 };
