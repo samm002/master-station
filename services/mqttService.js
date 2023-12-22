@@ -200,5 +200,4 @@ module.exports = {
   publishMatchingRules,
   ackReceivedFromService,
   publishAckToTrigger,
-  publishService_ACK
 };
