@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "start": "pm2 start app.js --name master-station --watch",
+    "stop": "pm2 stop master-station",
+    "restart": "pm2 restart master-station",
     "dev": "nodemon app.js"
   },
   "keywords": [],
@@ -13,7 +16,9 @@
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "moment": "^2.29.4",
-    "mongoose": "^8.0.0",
+    "moment-timezone": "^0.5.43",
+    "mongodb": "^6.3.0",
+    "mongoose": "^8.0.3",
     "mqtt": "^5.1.4"
   },
   "devDependencies": {

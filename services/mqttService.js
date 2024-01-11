@@ -2,7 +2,7 @@ const moment = require("moment");
 const Device = require("../models/deviceModel");
 let timeout;
 const { client } = require("../mqtt/mqttSetup");
-const { getAllRules } = require("../services/ruleService");
+const { getAllRules, getRuleByRule_id } = require("../services/ruleService");
 const {
   getPublishedDevice,
   getDeviceCompareData,
@@ -40,6 +40,26 @@ const publishAllRulesToMqttService = async (topic) => {
 
     console.log(message);
     return { "Publish Time": timestamp, message, rules };
+  } catch (error) {
+    console.error("Failed to retrieve or publish rules:", error);
+    throw error;
+  }
+};
+
+const publishRuleByIdService = async (topic, rule_id) => {
+  const message = `Rules published to topic : ${topic}`;
+  const timestamp = moment().format("MM/DD/YYYY, HH:mm:ss");
+  try {
+    const rule = await getRuleByRule_id(rule_id);
+    const payload = JSON.stringify(rule);
+    client.publish(topic, payload, (error) => {
+      if (error) {
+        console.error(`Failed to publish rule: ${JSON.stringify(rule)}`);
+      }
+    });
+
+    console.log(message);
+    return { "Publish Time": timestamp, message, rule };
   } catch (error) {
     console.error("Failed to retrieve or publish rules:", error);
     throw error;
@@ -84,7 +104,7 @@ const findMatchingRules = async () => {
   
   const transformed = latestDeviceValues.map(transformObject);
   const mergedObject = mergeObjectsFromArray(transformed);
-  
+
   const matchingRules = [];
   const candidateRules = [];
   let maxTotalTrigger = 0;
@@ -157,6 +177,26 @@ const publishMatchingRules = async (matchingRules) => {
   });
 };
 
+const publishService_ACK = async (matchingRules) => {
+  const publishedTopic = "service_ack";
+  matchingRules.forEach(async (matchingRule) => {
+    for (const device_id in matchingRule.service) {
+      const serviceData = {
+        [device_id]: matchingRule.service[device_id],
+      };
+      const deviceId = Object.keys(serviceData)[0];
+      const serviceValue = serviceData[device_id];
+      const serviceDevice = new Device({
+        device_id: deviceId,
+        device_value: serviceValue,
+      });
+
+      const publishedPayload = getDeviceCompareData(serviceDevice);
+      publishServiceACKMessage(publishedTopic, publishedPayload);
+    }
+  });
+};
+
 const ackReceivedFromService = async (payload) => {
   const serviceDevice = new Device(payload);
   const serviceId = serviceDevice.device_id;
@@ -190,6 +230,15 @@ const publishMqttMessage = (topic, message) => {
   });
 };
 
+const publishServiceACKMessage = (topic, message) => {
+  const payload = JSON.stringify(message);
+  client.publish(topic, payload, (error) => {
+    if (error) {
+      console.error(`Failed to publish service data to topic ${topic}, message :`, message, "\n");
+    }
+  });
+};
+
 module.exports = {
   ackTimeout,
   clearAckTimeout,
@@ -200,4 +249,6 @@ module.exports = {
   publishMatchingRules,
   ackReceivedFromService,
   publishAckToTrigger,
+  publishService_ACK,
+  publishRuleByIdService
 };

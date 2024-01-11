@@ -12,5 +12,6 @@ router.delete("/all", ruleController.deleteAllRule);
 router.delete("/:rule_id", ruleController.deleteRule);
 
 router.post("/publish", mqttController.publishAllRulesToMqtt);
+router.post("/publish/:rule_id", mqttController.publishRuleById);
 
 module.exports = router;

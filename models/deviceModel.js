@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
-const moment = require("moment");
+const moment = require("moment-timezone");
+moment.tz.setDefault("Asia/Jakarta");
 
 const deviceSchema = new mongoose.Schema({
   device_id: Number,

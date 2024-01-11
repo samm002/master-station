@@ -11,12 +11,28 @@ const {
   ackTimeout,
   clearAckTimeout,
   publishService_ACK,
+  publishRuleByIdService,
 } = require("../services/mqttService");
 
 const publishAllRulesToMqtt = async (req, res) => {
   const topic = "rule";
   try {
     const publish = await publishAllRulesToMqttService(topic);
+    res.json(publish);
+  } catch (error) {
+    console.error("error :", error);
+    res.status(500).json({
+      error: `Failed to publish rules to ${topic} topic`,
+      detail: error.message,
+    });
+  }
+};
+
+const publishRuleById = async (req, res) => {
+  const { rule_id } = req.params;
+  const topic = "rule";
+  try {
+    const publish = await publishRuleByIdService(topic, rule_id);
     res.json(publish);
   } catch (error) {
     console.error("error :", error);
@@ -40,8 +56,9 @@ client.on("message", async (topic, payload) => {
           publishMatchingRules(matchedRules);
           ackTimeout(timeout);
           console.log("Waiting for ACK Messages...");
+          // publishService_ACK(matchedRules);
         } else {
-          console.log("\nWaiting for MQTT messages...")
+            console.log("\nWaiting for MQTT messages...");
         }
       } else if (topic === "service_ack") {
         await ackReceivedFromService(parsedPayload);
@@ -56,4 +73,5 @@ client.on("message", async (topic, payload) => {
 
 module.exports = {
   publishAllRulesToMqtt,
+  publishRuleById
 };
